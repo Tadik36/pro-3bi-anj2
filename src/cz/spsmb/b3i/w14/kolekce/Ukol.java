@@ -26,10 +26,10 @@ public class Ukol {
             System.out.println("ar = new ArrayList<Integer>(N) " + tE );
             System.out.println("sar = new ArrayList<Integer>() " + tE2 );
             if(tE < tE2){
-                System.out.println("Rychlejší je ar");
+                System.out.println("Rychlejší je sar");
             }
             else if(tE2 < tE){
-                System.out.println("Rychlejší je sar");
+                System.out.println("Rychlejší je ar");
             }else{
                 System.out.println("Oba jsou stejně rychlé");
             }
