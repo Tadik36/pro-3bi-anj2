@@ -8,8 +8,7 @@ public class LinkedList implements Iterable {
     public Node getHead() {
         return head;
     }
-    void printList()
-    {
+    void printList() {
         Node n = this.head;
         int i = 0;
         while (n != null) {

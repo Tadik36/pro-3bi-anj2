@@ -7,7 +7,7 @@ public class AssertDemo {
         try{
             //aby toto fungovalo, je potřeba do VMOptions přidat parametr
             //-enableassertions, resp. -ea
-            assert(i == 0)  //Test splnění požadované podmínky
+            assert false  //Test splnění požadované podmínky
                     : "\nPříkaz assert vyhodil výjimku"; // Zpráva při nespnění
         }
         catch (AssertionError ae){

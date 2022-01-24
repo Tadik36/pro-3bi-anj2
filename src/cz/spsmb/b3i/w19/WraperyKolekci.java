@@ -29,13 +29,13 @@ import java.util.List;
 public class WraperyKolekci {
     public static void unmodified(){
         ArrayList<Integer> list = new ArrayList<>();
-        list.add(Integer.valueOf(5));
-        List<Integer> readOnlyList = Collections.unmodifiableList(list);
+        list.add(5);
+        List<Integer> readOnlyList = new ArrayList<>(Collections.unmodifiableList(list));
         //teď už opravdu není cesta, jak zapisovat
         list = null;
         System.out.println(readOnlyList);
         //nelze, pouze pro čtení. Výjimka UnsupportedOperationException
-        readOnlyList.add(Integer.valueOf(5));
+        readOnlyList.add(5);
     }
     public static void singleton(){
         ArrayList<String> list = new ArrayList<>();
