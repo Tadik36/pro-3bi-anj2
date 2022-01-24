@@ -18,6 +18,14 @@ package cz.spsmb.b3i.w21.domaci_ukol;
 public class Zadani {
     public static void main(String[] args) {
         try{
+            LinkedList ll = new LinkedList();
+           /* ll.append("prvni");
+            ll.append("druhy");
+            ll.append("treti");
+            ll.append("ctvrty");*/
+            System.out.println(ll.vyjmiPrvniho());
+            ll.printList();
+
 
         }
         catch(Exception e) {
@@ -29,4 +37,5 @@ public class Zadani {
             //nahoře.
         }*/
     }
-}
+    }
+
