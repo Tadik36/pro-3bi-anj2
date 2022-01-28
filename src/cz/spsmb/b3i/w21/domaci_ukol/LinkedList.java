@@ -34,8 +34,7 @@ public class LinkedList {
         while (curr.next != null)
             curr = curr.next;
 
-        Node newNode = new Node(data);
-        curr.next = newNode;
+        curr.next = new Node(data);
     }
     public Object vyjmiPrvniho() throws SeznamException {
         Object tmp = null;
