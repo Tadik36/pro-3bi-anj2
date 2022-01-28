@@ -16,20 +16,20 @@ package cz.spsmb.b3i.w21.domaci_ukol;
  */
 
 public class Zadani {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         try{
             LinkedList ll = new LinkedList();
-           /* ll.append("prvni");
-            ll.append("druhy");
-            ll.append("treti");
-            ll.append("ctvrty");*/
+            ll.append("prvni");
+            ll.append(2);
             System.out.println(ll.vyjmiPrvniho());
-            ll.printList();
+            System.out.println(ll.vyjmiPrvniho());
+            System.out.println(ll.vyjmiPrvniho());
 
 
         }
         catch(Exception e) {
-
+            System.out.println("chyba neco se stalo:"+e.getMessage());
+            throw new Exception(e);
         }/*
         catch (IOException e) {
             //tento blok nikdy nenastane, neboť IOException je

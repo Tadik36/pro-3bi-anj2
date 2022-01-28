@@ -3,6 +3,7 @@ package cz.spsmb.b3i.w21.domaci_ukol;
 class SeznamException extends Exception{
     public SeznamException(String message) {
         super("seznam prázdný");
+
     }
 }
 public class LinkedList {
@@ -16,7 +17,7 @@ public class LinkedList {
         Node n = this.head;
         int i = 0;
         while (n != null) {
-            System.out.print(((i%10==0)?"\n":" ") + n.toString());
+            System.out.print(((i%10==0)?"\n":" ") + n.getData());
             n = n.next;
             i++;
         }
@@ -36,10 +37,14 @@ public class LinkedList {
         Node newNode = new Node(data);
         curr.next = newNode;
     }
-    public Object vyjmiPrvniho(){
-        Node tmp = this.head;
-        this.head = this.head.next;
+    public Object vyjmiPrvniho() throws SeznamException {
+        Object tmp = null;
+        if (this.head!=null) {
+            tmp = this.head.data;
+            this.head = this.head.next;
+        }else {
+            throw new SeznamException("seznam prazdny");
+        }
         return tmp;
-
     }
 }
