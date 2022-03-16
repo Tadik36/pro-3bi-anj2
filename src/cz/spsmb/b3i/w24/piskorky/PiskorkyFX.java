@@ -3,6 +3,7 @@ package cz.spsmb.b3i.w24.piskorky;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.collections.ObservableMap;
 import javafx.event.ActionEvent;
@@ -14,6 +15,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -42,9 +44,19 @@ public class PiskorkyFX extends Application {
     private int port = 8081;
     private Timeline tl;
     private Stage playerNameStage;
+    private TextField playerNameTextField;
+    private String playerName;
 
     public PiskorkyFX() {
         this.setPiskvorkyStatusFromServer();
+        this.playerNameStage = new Stage();
+        Label playerNameLabel = new Label("jmeno hráče: ");
+        this.playerNameTextField = new TextField();
+        playerNameTextField.setOnKeyPressed(e -> handle(e));
+        HBox playerNameRoot = new HBox(playerNameLabel,playerNameTextField);
+        Scene playerName = new Scene(playerNameRoot);
+        this.playerNameStage.setScene(playerName);
+        this.playerNameStage.showAndWait();
         this.tl = new Timeline(new KeyFrame(Duration.millis(3000), this::animationHandler));
         tl.setCycleCount(Timeline.INDEFINITE);
         tl.play();
@@ -105,6 +117,8 @@ public class PiskorkyFX extends Application {
     }
 
     public void refreshPiskvorkyStatus() {
+        System.out.println(this.ps.hraci.get(ps.aktivniHrac) + " "+ this.playerName+"<");
+        System.out.println(!this.ps.hraci.get(ps.aktivniHrac).equals(this.playerName));
         for (int i = 0; i < this.ps.rozmerHraciPlochy + 1; i++) {
             for (int j = 0; j < this.ps.rozmerHraciPlochy + 1; j++) {
                 Button b = this.herniTlacitka[i][j];
@@ -112,6 +126,7 @@ public class PiskorkyFX extends Application {
                 b.getProperties().putAll(this.ps.herniTlacitka[i][j]);
                 int player = (int) this.ps.herniTlacitka[i][j].get("player");
                 b.setText(player < 0 ? "" : this.ps.hraci.get(player).toString().substring(0, 1));
+                b.setMouseTransparent(!this.ps.hraci.get(ps.aktivniHrac).equals(this.playerName));
             }
         }
     }
@@ -145,14 +160,7 @@ public class PiskorkyFX extends Application {
             root.setCenter(gp);
             Scene scene = new Scene(new Group(root));
             stage.setScene(scene);
-            this.playerNameStage = new Stage();
-            Label playerNameLabel = new Label("jmeno hráče: ");
-            TextField playerNameTextField = new TextField();
-            playerNameTextField.setOnKeyTyped(e -> handle(e));
-            HBox playerNameRoot = new HBox(playerNameLabel,playerNameTextField);
-            Scene playerName = new Scene(playerNameRoot);
-            this.playerNameStage.setScene(playerName);
-            this.playerNameStage.showAndWait();
+            stage.setTitle("hráč: "+this.playerName);
             stage.show();
 
             this.refreshPiskvorkyStatus();
@@ -161,13 +169,26 @@ public class PiskorkyFX extends Application {
         }
 
     }
+    private void winScreen(String player){
+        Label lb = new Label(player + " Vyhrál");
+        HBox hb = new HBox(lb);
+        Scene sc = new Scene(hb);
+        Stage st = new Stage();
+        st.setScene(sc);
+        st.showAndWait();
+        Platform.exit();
+
+
+    }
 
     private void handle(KeyEvent e) {
-        String hrac = e.getCharacter();
-        System.out.println(hrac);
-        this.ps.pridatHrace(hrac);
-        this.sputPiskvorkyStatusToServer();
-        this.playerNameStage.close();
+        if(e.getCode() == KeyCode.ENTER){
+            this.playerName = this.playerNameTextField.getText();
+            System.out.println(this.playerName);
+            this.ps.pridatHrace(this.playerName);
+            this.sputPiskvorkyStatusToServer();
+            this.playerNameStage.close();
+        }
     }
 
     public void tlacitkoStisknuto(ActionEvent actionEvent) {
@@ -223,15 +244,20 @@ public class PiskorkyFX extends Application {
             for (int sloupec1 = 0; sloupec1 < this.ps.rozmerHraciPlochy; sloupec1++) {
                 if (this.isVerticalWin(radek1, sloupec1, N)) {
                     System.out.println("Win vertical");
+                    this.winScreen(this.playerName);
                 }
                 if (this.isHorizontalWin(radek1, sloupec1, N)) {
                     System.out.println("Win horizontal");
+                    this.winScreen(this.playerName);
                 }
                 if (this.isDiagonalWin(radek1, sloupec1, N)) {
                     System.out.println("Win diagonal");
+                    this.winScreen(this.playerName);
+
                 }
                 if (this.isReverseDiagonalWin(radek1, sloupec1, N)) {
                     System.out.println("Win reverseDiagonal");
+                    this.winScreen(this.playerName);
                 }
             }
         }
