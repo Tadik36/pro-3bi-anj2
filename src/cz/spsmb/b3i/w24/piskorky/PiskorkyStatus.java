@@ -5,7 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PiskorkyStatus implements Serializable {
-    public final String VERSION = "1.0";
+    public final String VERSION = "1.10";
+    public final int nViteznych = 4;
     int rozmerHraciPlochy;
     int nTah = 1;
     //int[][] herniPlochaHracu;
@@ -30,9 +31,17 @@ public class PiskorkyStatus implements Serializable {
         this.inicializaceTlacitek();
     }
 
-    public void pridatHrace(String jmeno){
+    public boolean pridatHrace(String jmeno){
+        for (String hrac : this.hraci) {
+            if(hrac.charAt(0) == jmeno.charAt(0)){
+                return true;
+            }
+        }
         this.hraci.add(jmeno);
+        return false;
     }
+
+
 
     public void inicializaceTlacitek(){
         for (int i = 0; i < this.rozmerHraciPlochy + 1; i++) {

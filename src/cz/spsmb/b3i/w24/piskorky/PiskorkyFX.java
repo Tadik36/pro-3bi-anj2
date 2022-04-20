@@ -40,8 +40,9 @@ import java.util.LinkedList;
 //org.openjfx:javafx-archetype-fxml:0.0.5
 //add --module-path "Y:\stemberk\verejne_zaci\javafx-sdk-17.0.1\lib" --add-modules javafx.controls,javafx.fxml
 public class PiskorkyFX extends Application {
-    private final String VERSION = "1.0";
+    private final String VERSION = "1.10";
     private final int MAX_PLAYER_LENGHT = 8;
+    private final int MIN_PLAYER_LENGHT = 3;
     private final String TITULEK = "Piškorky" + this.VERSION;
     private PiskorkyStatus ps;
     private Button[][] herniTlacitka;
@@ -140,10 +141,10 @@ public class PiskorkyFX extends Application {
                     b.setOnAction(null);
                     b.setText(this.ps.hraci.get(player).toString().substring(0, 1));
                 }
-
                 b.setMouseTransparent(!(this.ps.hraci.get(ps.aktivniHrac).equals(this.playerName) && this.ps.isStarted));
             }
         }
+        System.out.println("Transparency SET");
     }
 
     @Override
@@ -174,8 +175,10 @@ public class PiskorkyFX extends Application {
             this.startBtn.setOnMouseClicked(new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent mouseEvent) {
-                    PiskorkyFX.this.ps.isStarted = true;
-                    PiskorkyFX.this.sputPiskvorkyStatusToServer();
+                    if(PiskorkyFX.this.ps.getHraci().size() >= 2){
+                        PiskorkyFX.this.ps.isStarted = true;
+                        PiskorkyFX.this.sputPiskvorkyStatusToServer();
+                    }
                 }
             });
             root.setTop(this.panelKdoHraje);
@@ -211,18 +214,22 @@ public class PiskorkyFX extends Application {
     private void handle(KeyEvent e) {
         if(e.getCode() == KeyCode.ENTER){
             this.playerName = this.playerNameTextField.getText().trim();
-            if(this.playerName.length() > MAX_PLAYER_LENGHT){
+            if(this.playerName.length() > MAX_PLAYER_LENGHT || this.playerName.length() < MIN_PLAYER_LENGHT){
                 e.consume();
                 return;
             }
             this.setPiskvorkyStatusFromServer();
-            this.ps.pridatHrace(this.playerName);
+            if(this.ps.pridatHrace(this.playerName)){
+                e.consume();
+                return;
+            }
             this.sputPiskvorkyStatusToServer();
             this.playerNameStage.close();
         }
     }
 
     public void tlacitkoStisknuto(ActionEvent actionEvent) {
+        this.tl.stop();
         //aktuální souřadnice tlačítka
         int i = 0, j = 0;
         Button stisknuteTlacitko = ((Button) actionEvent.getSource());
@@ -233,61 +240,9 @@ public class PiskorkyFX extends Application {
         //this.ps.herniPlochaHracu[i][j] = this.ps.aktivniHrac;
         //stisknuteTlacitko.getProperties().put("player",Integer.valueOf(this.ps.aktivniHrac));
         this.ps.herniTlacitka[i][j].put("player", this.ps.aktivniHrac);
-
-
         System.out.println();
-        int N = 3;
-        System.out.format("verticalWin:%b, horizontalWin:%b, diagonalwin:%b, isReverseDiagonalWin:%b%n",
-                this.isVerticalWin(i, j, N),
-                this.isHorizontalWin(i, j, N),
-                this.isDiagonalWin(i, j, N),
-                this.isReverseDiagonalWin(i, j, N));
-        int y = i;
-        int x = j;
-        //pozor, potřeba použít operátor úplného vyhodnocení
-        while (--y > 0 & --x > 0) ;
-        //System.out.format("x:%d, y:%d%n", x,y);
-        for (; y < this.ps.rozmerHraciPlochy && x < this.ps.rozmerHraciPlochy; y++, x++) {
-            if (this.isReverseDiagonalWin(y, x, N)) {
-                System.out.println("ReverseDiagonal");
-                break;
-            }
-        }
-        y = i;
-        x = j;
-        if (y != this.ps.rozmerHraciPlochy) {
-            while (++y < this.ps.rozmerHraciPlochy & --x > 0) ;
-        }
-        System.out.format("x:%d, y:%d%n", x, y);
-        for (; y > 0 && x < this.ps.rozmerHraciPlochy; y--, x++) {
-            if (this.isDiagonalWin(y, x, N)) {
-                System.out.println("Diagonal");
-                break;
-            }
-        }
-        lab_for1:
-        for (int radek1 = 0; radek1 < this.ps.rozmerHraciPlochy; radek1++) {
-            for (int sloupec1 = 0; sloupec1 < this.ps.rozmerHraciPlochy; sloupec1++) {
-                if (this.isVerticalWin(radek1, sloupec1, N) || this.isHorizontalWin(radek1, sloupec1, N) ||
-                        this.isDiagonalWin(radek1, sloupec1, N) || this.isReverseDiagonalWin(radek1, sloupec1, N))  {
-
-                    System.out.println("Win");
-                    this.ps.isEnded = true;
-                    this.sputPiskvorkyStatusToServer();
-                    break lab_for1;
-                }
-            }
-        }
-        if(!this.ps.isEnded){
-            //přepnutí hráče
-            if (++this.ps.aktivniHrac >= this.ps.hraci.size()) {
-                this.ps.aktivniHrac = 0;
-            }
-            //stisknuteTlacitko.getProperties().put("player", this.ps.aktivniHrac);
-        }
-
         System.out.println("Vypis");
-        //vypis
+//        //vypis
         for (i = 0; i < this.ps.rozmerHraciPlochy; i++) {
             for (j = 0; j < this.ps.rozmerHraciPlochy; j++) {
                 //System.out.format(" %02d ",this.ps.herniPlochaHracu[i][j]);
@@ -298,78 +253,10 @@ public class PiskorkyFX extends Application {
         }
         this.refreshPiskvorkyStatus();
         this.sputPiskvorkyStatusToServer();
+        //zabránění stisku více políček mezi stisknutím prvního a refreshem pomocí timeru
+        this.setPiskvorkyStatusFromServer();
+        this.tl.play();
     }
 
-    private boolean isVerticalWin(int radek, int sloupec, int n) {
-        int aktualniHrac = (int) this.ps.herniTlacitka[radek][sloupec].get("player");
-        if (aktualniHrac < 0) {
-            return false;
-        }
-        for (int i = radek; i < radek + n; i++) {
-            if (this.ps.rozmerHraciPlochy < i) {
-                return false;
-            }
-            if (aktualniHrac != (int) this.ps.herniTlacitka[i][sloupec].get("player")) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean isHorizontalWin(int radek, int sloupec, int n) {
-        int aktualniHrac = (int) this.ps.herniTlacitka[radek][sloupec].get("player");
-        if (aktualniHrac < 0) {
-            return false;
-        }
-        for (int j = sloupec; j < sloupec + n; j++) {
-            if (this.ps.rozmerHraciPlochy < j) {
-                return false;
-            }
-            if (aktualniHrac != (int) this.ps.herniTlacitka[radek][j].get("player")) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean isDiagonalWin(int radek, int sloupec, int n) {
-        int aktualniHrac = (int) this.ps.herniTlacitka[radek][sloupec].get("player");
-        if (aktualniHrac < 0) {
-            return false;
-        }
-        int j = sloupec;
-        for (int i = radek; i > radek - n; i--, j++) {
-            if (i <= 0) {
-                return false;
-            }
-            if (j > this.ps.rozmerHraciPlochy) {
-                return false;
-            }
-            if (aktualniHrac != (int) this.ps.herniTlacitka[i][j].get("player")) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean isReverseDiagonalWin(int radek, int sloupec, int n) {
-        int aktualniHrac = (int) this.ps.herniTlacitka[radek][sloupec].get("player");
-        if (aktualniHrac < 0) {
-            return false;
-        }
-        int j = sloupec;
-        for (int i = radek; i < radek + n; i++, j++) {
-            if (i > this.ps.rozmerHraciPlochy) {
-                return false;
-            }
-            if (j > this.ps.rozmerHraciPlochy) {
-                return false;
-            }
-            if (aktualniHrac != (int) this.ps.herniTlacitka[i][j].get("player")) {
-                return false;
-            }
-        }
-        return true;
-    }
 
 }
