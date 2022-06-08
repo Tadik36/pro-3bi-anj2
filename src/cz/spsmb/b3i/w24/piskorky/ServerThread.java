@@ -11,18 +11,24 @@ public class ServerThread extends Thread {
     private class Helper extends TimerTask implements Serializable {
         @Override
         public void run() {
-            PiskorkyServer.ps.hraci.remove(PiskorkyServer.ps.aktivniHrac);
+            ServerThread.this.isTimerScheduled = false;
+         //   PiskorkySci.remove(PiskorkyServer.ps.aktivniHrac);erver.ps.hra
+            System.out.format("Hrac %s dlouho nehral.%n", PiskorkyServer.ps.hraci.get(PiskorkyServer.ps.aktivniHrac));
         }
     }
 
-    protected Socket socket;
-    java.util.Timer timer = new Timer();
-    int request = 0;
+     protected Socket socket;
+    private java.util.Timer timer = new Timer();
+    private int request = 0;
+    private int hrac = -1;
+    private boolean isTimerScheduled;
+
 
     /**
      * @param clientSocket instance socketu získaného pomocí metody accept() instance třídy ServerSocket
      */
     public ServerThread(Socket clientSocket) {
+
         this.socket = clientSocket;
         try {
             this.socket.setKeepAlive(true);
@@ -118,7 +124,6 @@ public class ServerThread extends Thread {
                     attempts++;
                     Thread.sleep(10);
                 }
-
                 request = inp.read();
                 System.out.println(request);
             } catch (IOException | InterruptedException e) {
@@ -162,6 +167,10 @@ public class ServerThread extends Thread {
                         synchronized (PiskorkyServer.ps) {
                             if (!PiskorkyServer.ps.isEnded) {
                                 PiskorkyServer.ps = ps;
+                                if (this.hrac== -1){
+                                    this.hrac = PiskorkyServer.ps.hraci.size() -1;
+                                    System.out.format("%s%n", PiskorkyServer.ps.hraci.toString() );
+                                }
                             }
                         }
                         lab_for1:
@@ -173,6 +182,7 @@ public class ServerThread extends Thread {
                                     System.out.println("Win");
                                     PiskorkyServer.ps.isEnded = true;
 //reset piskvorek po skonceni 3s
+/*
                                     timer.schedule(new TimerTask() {
                                                        @Override
                                                        public void run() {
@@ -180,16 +190,16 @@ public class ServerThread extends Thread {
                                                        }
                                                    }, 3000
                                     );
-
+*/
                                     break lab_for1;
                                 }
                             }
                         }
                         PiskorkyServer.ps.prepnutiHrace();
-                        if (ps.isStarted) {
-                            this.timer.cancel();
+                       /* if (ps.isStarted) {
+                            //this.timer.cancel();
                             this.timer.schedule(new Helper(), PiskorkyServer.ps.TIMEOUT);
-                        }
+                        }*/
                         System.out.println(PiskorkyServer.ps.getHraci());
                         //        //vypis
                         for (int i = 0; i < PiskorkyServer.ps.rozmerHraciPlochy; i++) {
@@ -207,6 +217,25 @@ public class ServerThread extends Thread {
                     }
                     break;
             }
+            System.out.println(this.hrac);
+            if (this.hrac>=0){
+                System.out.format("(%s )%n", PiskorkyServer.ps.hraci.get(this.hrac));
+            }
+            /*
+            if (this.hrac == PiskorkyServer.ps.aktivniHrac){
+                if (this.isTimerScheduled == false) {
+                    this.timer.schedule(new Helper(), PiskorkyServer.ps.TIMEOUT);
+                    this.isTimerScheduled = true;
+                    System.out.format("(%s ) timerScheduled%n", PiskorkyServer.ps.hraci.get(this.hrac));
+                }
+            }else{
+                if (this.isTimerScheduled){
+                    this.timer.cancel();
+                    this.isTimerScheduled = false;
+                    System.out.format("(%s ) timerCanceled%n", PiskorkyServer.ps.hraci.get(this.hrac));
+                }
+
+            }*/
         }
     }
 }
